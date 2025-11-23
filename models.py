@@ -11,10 +11,10 @@ app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 # Se estiver usando XAMPP local, geralmente user='root' e senha='' (vazia).
 # Se não tiver criado o banco ainda, entre no MySQL e rode: CREATE DATABASE timesend_db;
 
-usuario = "root"        # Seu usuário do MySQL
-senha = "root"              # Sua senha do MySQL
-host = "127.0.0.1:3306"      # O endereço (localhost ou IP da nuvem)
-banco = "timesend_db"   # O nome do banco que você criou
+usuario = "****"        # Seu usuário do MySQL
+senha = "***"              # Sua senha do MySQL
+host = "****"      # O endereço (localhost ou IP da nuvem)
+banco = "****"   # O nome do banco que você criou
 
 # Monta a URL de conexão
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{usuario}:{senha}@{host}/{banco}'
