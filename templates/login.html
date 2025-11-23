@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link rel="shortcut icon" type="image/x-icon" href="https://img.icons8.com/3d-fluency/94/music-robot.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Login - TimeSend</title>
+</head>
+<body>
+    <main class="card login-card" role="main" aria-labelledby="login-title">
+        <h1 id="login-title">TimeSend</h1>
+        <p class="lead">Acesse sua conta de administrador ou usuário.</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div style="background-color: #ffcccc; color: #cc0000; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="post">
+            <div>
+                <label for="username">Usuário:</label>
+                <input id="username" name="username" type="text" required placeholder="Digite seu usuário" />
+            </div>
+
+            <div style="margin-top:12px;">
+                <label for="password">Senha:</label>
+                <input id="password" name="password" type="password" required placeholder="••••••••" />
+            </div>
+
+            <div class="actions">
+                <div class="muted">
+                    <label style="display:inline">
+                        <input type="checkbox" name="remember" style="margin-right:6px"> Lembrar-me
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:18px">
+                <button type="submit">Entrar</button>
+            </div>
+        </form>
+
+        <p style="text-align:center;margin-top:14px;font-size:13px;color:gray">
+            Esqueceu a senha? Contate o administrador.
+        </p>
+    </main>
+</body>
+</html>

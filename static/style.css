@@ -1,0 +1,167 @@
+/* --- Configurações Gerais --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5; /* Cor de fundo padrão cinza claro */
+    margin: 0;
+    padding: 0;
+    color: #111b21;
+    line-height: 1.6;
+}
+
+/* Centraliza o login na tela */
+body:has(.login-card) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* --- Estilo dos Cartões (Cards) --- */
+.card {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Limita a largura no Login */
+main.card {
+    max-width: 400px;
+    margin: auto;
+}
+
+/* Limita a largura no Dashboard */
+.container .card {
+    margin-bottom: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* --- Tipografia --- */
+h1, h2, h3 {
+    margin-top: 0;
+    color: #111b21;
+}
+
+#login-title {
+    text-align: center;
+    color: #00a884; /* Verde WhatsApp */
+    font-size: 2rem;
+}
+
+.lead {
+    text-align: center;
+    color: #54656f;
+    margin-bottom: 25px;
+}
+
+.muted {
+    color: #667781;
+    font-size: 0.9rem;
+}
+
+/* --- Formulários (Inputs) --- */
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #3b4a54;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="time"],
+input[type="file"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #dfe1e5;
+    border-radius: 6px;
+    box-sizing: border-box; /* Garante que o padding não estoure a largura */
+    font-size: 1rem;
+    background-color: #fcfcfc;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #00a884;
+    outline: none;
+    background-color: #fff;
+}
+
+/* --- Botões --- */
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #00a884;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #008f6f;
+}
+
+/* Links */
+a {
+    color: #00a884;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.logout {
+    float: right;
+    color: #ea0038;
+    font-weight: bold;
+}
+
+/* --- Extras do Dashboard --- */
+.admin-box {
+    border: 2px dashed #ff9800;
+    background-color: #fff8e1;
+}
+
+/* Tabelas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e9edef;
+}
+
+th {
+    background-color: #f0f2f5;
+    color: #54656f;
+}
+
+/* Mensagens de Erro (Flash) */
+.flash-message {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 15px;
+    border: 1px solid #fecaca;
+}

@@ -1,0 +1,46 @@
+2025/11/23-18:44:03.985 2510 Reusing MANIFEST c:\Users\jg304\OneDrive\Área de Trabalho\TimeSend\sessao_zap\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/11/23-18:44:03.986 2510 Recovering log #1383
+2025/11/23-18:44:03.996 2510 Reusing old log c:\Users\jg304\OneDrive\Área de Trabalho\TimeSend\sessao_zap\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001383.log 
+2025/11/23-18:44:04.289 2510 Level-0 table #1395: started
+2025/11/23-18:44:04.300 2510 Level-0 table #1395: 304807 bytes OK
+2025/11/23-18:44:04.302 2510 Delete type=0 #1383
+2025/11/23-18:44:04.303 2510 Manual compaction at level-0 from '\x00\x9e\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x9f\x00\x00\x00' @ 0 : 0; will stop at '\x00\x9e\x00\x00\x05' @ 5638401 : 1
+2025/11/23-18:44:04.303 2510 Compacting 1@0 + 1@1 files
+2025/11/23-18:44:04.313 2510 Generated table #1396@0: 6607 keys, 140831 bytes
+2025/11/23-18:44:04.316 2510 Generated table #1397@0: 140 keys, 7209 bytes
+2025/11/23-18:44:04.316 2510 Compacted 1@0 + 1@1 files => 148040 bytes
+2025/11/23-18:44:04.318 2510 compacted to: files[ 0 2 17 0 0 0 0 ]
+2025/11/23-18:44:04.318 2510 Delete type=2 #1395
+2025/11/23-18:44:04.319 2510 Manual compaction at level-0 from '\x00\x9e\x00\x00\x05' @ 5638401 : 1 .. '\x00\x9f\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/11/23-18:44:05.751 3cb8 Compacting 1@1 + 6@2 files
+2025/11/23-18:44:05.810 3cb8 Generated table #1398@1: 75885 keys, 2260351 bytes
+2025/11/23-18:44:05.869 3cb8 Generated table #1399@1: 34424 keys, 2207100 bytes
+2025/11/23-18:44:05.899 3cb8 Generated table #1400@1: 16215 keys, 2156465 bytes
+2025/11/23-18:44:05.925 3cb8 Generated table #1401@1: 1685 keys, 2140181 bytes
+2025/11/23-18:44:05.972 3cb8 Generated table #1402@1: 28003 keys, 2229294 bytes
+2025/11/23-18:44:05.996 3cb8 Generated table #1403@1: 3882 keys, 2123593 bytes
+2025/11/23-18:44:05.999 3cb8 Generated table #1404@1: 7 keys, 35246 bytes
+2025/11/23-18:44:05.999 3cb8 Compacted 1@1 + 6@2 files => 13152230 bytes
+2025/11/23-18:44:06.000 3cb8 compacted to: files[ 0 1 18 0 0 0 0 ]
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1386
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1387
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1388
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1389
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1390
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1391
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1392
+2025/11/23-18:44:06.000 3cb8 Delete type=2 #1396
+2025/11/23-18:44:17.295 2510 Compacting 1@1 + 6@2 files
+2025/11/23-18:44:17.372 2510 Generated table #1405@1: 111849 keys, 2264451 bytes
+2025/11/23-18:44:17.460 2510 Generated table #1406@1: 112932 keys, 2266712 bytes
+2025/11/23-18:44:17.542 2510 Generated table #1407@1: 112410 keys, 2265527 bytes
+2025/11/23-18:44:17.601 2510 Generated table #1408@1: 71087 keys, 1503607 bytes
+2025/11/23-18:44:17.601 2510 Compacted 1@1 + 6@2 files => 8300297 bytes
+2025/11/23-18:44:17.602 2510 compacted to: files[ 0 0 16 0 0 0 0 ]
+2025/11/23-18:44:17.603 2510 Delete type=2 #1332
+2025/11/23-18:44:17.603 2510 Delete type=2 #1361
+2025/11/23-18:44:17.603 2510 Delete type=2 #1363
+2025/11/23-18:44:17.603 2510 Delete type=2 #1364
+2025/11/23-18:44:17.603 2510 Delete type=2 #1365
+2025/11/23-18:44:17.603 2510 Delete type=2 #1366
+2025/11/23-18:44:17.603 2510 Delete type=2 #1397

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel - TimeSend</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #00a884; margin-top: 0; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #00a884; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        button:hover { background-color: #008f6f; }
+        .logout { float: right; color: red; text-decoration: none; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+        .admin-box { border: 2px dashed #ff9800; background-color: #fff8e1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <a href="/logout" class="logout">Sair</a>
+            <h2>Olá, {{ nome }}!</h2>
+            <p>Use o formulário abaixo para agendar suas mensagens automáticas.</p>
+        </div>
+
+        <div class="card">
+            <h3>📅 Novo Agendamento</h3>
+            <form action="/agendar" method="POST" enctype="multipart/form-data">
+                <label>Número do Cliente (com 55 e DDD):</label>
+                <input type="text" name="numero" placeholder="Ex: 5511999998888" required>
+
+                <label>Mensagem de Texto:</label>
+                <textarea name="texto" rows="4" placeholder="Digite sua mensagem..."></textarea>
+
+                <label>Imagem (Opcional):</label>
+                <input type="file" name="imagem_upload" accept="image/*">
+
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label>Horário:</label>
+                        <input type="time" name="horario" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Frequência:</label>
+                        <select name="frequencia">
+                            <option value="unica">Apenas Hoje</option>
+                            <option value="diaria">Todos os dias</option>
+                            <option value="seg-sex">Segunda a Sexta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit">Agendar Envio</button>
+            </form>
+        </div>
+
+        {% if current_user.is_admin %}
+        <div class="card admin-box">
+            <h3 style="color: #e65100;">👑 Área do Administrador</h3>
+            <p>Cadastrar novo usuário no sistema.</p>
+            <form action="/criar_usuario" method="POST">
+                <input type="text" name="new_username" placeholder="Novo Usuário" required style="width: 48%; display: inline-block;">
+                <input type="password" name="new_password" placeholder="Nova Senha" required style="width: 48%; display: inline-block;">
+                <button type="submit" style="background-color: #e65100;">Criar Usuário</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h3>Histórico de Agendamentos</h3>
+            <table>
+                <tr>
+                    <th>Para</th>
+                    <th>Horário</th>
+                    <th>Freq.</th>
+                    <th>Mensagem</th>
+                </tr>
+                {% for tarefa in tarefas %}
+                <tr>
+                    <td>{{ tarefa.destinatario }}</td>
+                    <td>{{ tarefa.horario }}</td>
+                    <td>{{ tarefa.dias_semana or 'Única' }}</td>
+                    <td>{{ tarefa.mensagem[:30] }}...</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4">Nenhum agendamento encontrado.</td></tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html>

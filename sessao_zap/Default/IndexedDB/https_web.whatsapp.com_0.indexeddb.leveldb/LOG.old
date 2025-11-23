@@ -1,0 +1,31 @@
+2025/11/23-18:42:03.522 3f78 Reusing MANIFEST c:\Users\jg304\OneDrive\Área de Trabalho\TimeSend\sessao_zap\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/11/23-18:42:03.523 3f78 Recovering log #1367
+2025/11/23-18:42:03.524 3f78 Reusing old log c:\Users\jg304\OneDrive\Área de Trabalho\TimeSend\sessao_zap\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001367.log 
+2025/11/23-18:42:04.705 2ea0 Level-0 table #1384: started
+2025/11/23-18:42:04.709 2ea0 Level-0 table #1384: 63916 bytes OK
+2025/11/23-18:42:04.710 2ea0 Delete type=0 #1367
+2025/11/23-18:42:04.711 3f78 Manual compaction at level-0 from '\x00\x9d\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x9e\x00\x00\x00' @ 0 : 0; will stop at '\x00\x9d\x00\x00\x05' @ 5627108 : 1
+2025/11/23-18:42:04.711 3f78 Compacting 1@0 + 1@1 files
+2025/11/23-18:42:04.715 3f78 Generated table #1385@0: 1128 keys, 28465 bytes
+2025/11/23-18:42:04.718 3f78 Generated table #1386@0: 134 keys, 6487 bytes
+2025/11/23-18:42:04.718 3f78 Compacted 1@0 + 1@1 files => 34952 bytes
+2025/11/23-18:42:04.719 3f78 compacted to: files[ 0 2 17 0 0 0 0 ]
+2025/11/23-18:42:04.719 3f78 Delete type=2 #1384
+2025/11/23-18:42:04.720 2ea0 Manual compaction at level-0 from '\x00\x9d\x00\x00\x05' @ 5627108 : 1 .. '\x00\x9e\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/11/23-18:42:06.175 cc4 Compacting 1@1 + 6@2 files
+2025/11/23-18:42:06.235 cc4 Generated table #1387@1: 74823 keys, 2257434 bytes
+2025/11/23-18:42:06.294 cc4 Generated table #1388@1: 35095 keys, 2205917 bytes
+2025/11/23-18:42:06.327 cc4 Generated table #1389@1: 15300 keys, 2157214 bytes
+2025/11/23-18:42:06.349 cc4 Generated table #1390@1: 1756 keys, 2141020 bytes
+2025/11/23-18:42:06.404 cc4 Generated table #1391@1: 27942 keys, 2231045 bytes
+2025/11/23-18:42:06.428 cc4 Generated table #1392@1: 3867 keys, 2121492 bytes
+2025/11/23-18:42:06.428 cc4 Compacted 1@1 + 6@2 files => 13114122 bytes
+2025/11/23-18:42:06.429 cc4 compacted to: files[ 0 1 17 0 0 0 0 ]
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1370
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1371
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1372
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1373
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1374
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1375
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1376
+2025/11/23-18:42:06.430 cc4 Delete type=2 #1385
