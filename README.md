@@ -4,7 +4,7 @@
 
 ---
 
-#⚠️ Estrutura de Pastas
+## ⚠️ Estrutura de Pastas
 /TimeSend
 │
 ├── app.py              # Aplicação principal e lógica do robô
@@ -22,7 +22,7 @@
 ├── /uploads            # Pasta temporária para imagens enviadas
 └── /sessao_zap         # Pasta onde o Login do WhatsApp fica salvo
 
---
+---
 
 ## 📋 Funcionalidades
 
@@ -38,7 +38,7 @@
 
 ---
 
-#🤖 Como funciona o Robô
+## 🤖 Como funciona o Robô
 O sistema abre uma instância do Google Chrome controlada pelo Selenium.
 
 Na primeira execução, será necessário escanear o QR Code do WhatsApp (a sessão ficará salva na pasta sessao_zap).
@@ -75,7 +75,7 @@ Erro DevToolsActivePort file doesn't exist: Geralmente ocorre se o Chrome já es
 
 ---
 
-#⚖️ Aviso Legal
+## ⚖️ Aviso Legal
 Este software é para fins de estudo e automação interna. O uso para SPAM ou envio não solicitado viola os termos de serviço do WhatsApp. Use com responsabilidade.
 
 ---
