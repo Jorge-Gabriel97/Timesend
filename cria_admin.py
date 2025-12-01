@@ -2,8 +2,8 @@ from models import app, db, User
 from werkzeug.security import generate_password_hash
 
 # Configurações do seu Admin inicial
-USERNAME = "LargeAdmin"  
-PASSWORD = "0710"  
+USERNAME = ""  
+PASSWORD = ""  
 
 def criar_super_admin():
     with app.app_context():
