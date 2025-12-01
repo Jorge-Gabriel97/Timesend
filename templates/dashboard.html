@@ -62,14 +62,14 @@
                         <form action="/cadastrar_cliente" method="POST">
                             <div class="mb-3">
                                 <label class="form-label small text-muted fw-bold">NOME</label>
-                                <input type="text" name="cliente_nome" class="form-control" placeholder="Ex: Cliente VIP" required>
+                                <input type="text" name="cliente_nome" class="form-control" placeholder="Ex: João Silva" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small text-muted fw-bold">WHATSAPP</label>
                                 <input type="text" name="cliente_telefone" class="form-control" placeholder="551199..." required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-save"></i> Salvar
+                                <i class="bi bi-save"></i> Salvar na Agenda
                             </button>
                         </form>
                     </div>
@@ -148,7 +148,7 @@
                                     <div class="p-2 bg-light border-bottom sticky-top">
                                         <label class="form-check-label fw-bold text-primary">
                                             <input class="form-check-input me-2" type="checkbox" onClick="toggleTodos(this)">
-                                            Selecionar Todos
+                                            Selecionar Todos da Agenda
                                         </label>
                                     </div>
                                     
@@ -180,4 +180,51 @@
 
                             <hr class="my-4">
 
-                            <h6 class="text-muted text
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3"><i class="bi bi-2-circle"></i> Conteúdo</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-7 mb-3">
+                                    <label class="form-label">Mensagem de Texto</label>
+                                    <textarea name="texto" class="form-control" rows="5" placeholder="Digite sua mensagem aqui..." style="resize: none;"></textarea>
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Imagem (Opcional)</label>
+                                    <div class="card bg-light border-dashed text-center p-3 h-100 d-flex justify-content-center align-items-center">
+                                        <div>
+                                            <i class="bi bi-card-image display-4 text-secondary"></i>
+                                            <input type="file" name="imagem_upload" class="form-control mt-3 form-control-sm" accept="image/*">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 align-items-end mt-2">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Horário de Início</label>
+                                    <input type="time" name="horario" class="form-control form-control-lg border-primary" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Repetição</label>
+                                    <select name="frequencia" class="form-select form-select-lg">
+                                        <option value="unica">Apenas Hoje</option>
+                                        <option value="diaria">Todo dia</option>
+                                        <option value="seg-sex">Segunda a Sexta</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-success btn-lg w-100 shadow">
+                                        <i class="bi bi-rocket-takeoff-fill"></i> AGENDAR
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
