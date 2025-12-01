@@ -1,167 +1,68 @@
-/* --- Configurações Gerais --- */
+/* style.css - Padrão Enterprise */
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f2f5; /* Cor de fundo padrão cinza claro */
-    margin: 0;
-    padding: 0;
-    color: #111b21;
-    line-height: 1.6;
+    background-color: #f8f9fa; /* Fundo cinza bem claro (Padrão SaaS) */
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Centraliza o login na tela */
-body:has(.login-card) {
+/* Ajuste dos Cards para parecerem "flutuantes" */
+.card-custom {
+    border: none;
+    border-radius: 12px; /* Bordas mais arredondadas */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05); /* Sombra suave */
+    height: 100%; /* Garante alinhamento */
+    transition: transform 0.2s;
+}
+
+.card-header-custom {
+    background-color: white;
+    border-bottom: 2px solid #f1f3f5;
+    font-weight: 600;
+    color: #343a40;
+    padding: 1.2rem;
+    border-radius: 12px 12px 0 0 !important;
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 100vh;
+    gap: 10px;
 }
 
-/* --- Estilo dos Cartões (Cards) --- */
-.card {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Limita a largura no Login */
-main.card {
-    max-width: 400px;
-    margin: auto;
-}
-
-/* Limita a largura no Dashboard */
-.container .card {
-    margin-bottom: 20px;
-}
-
-.container {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 0 20px;
-}
-
-/* --- Tipografia --- */
-h1, h2, h3 {
-    margin-top: 0;
-    color: #111b21;
-}
-
-#login-title {
-    text-align: center;
-    color: #00a884; /* Verde WhatsApp */
-    font-size: 2rem;
-}
-
-.lead {
-    text-align: center;
-    color: #54656f;
-    margin-bottom: 25px;
-}
-
-.muted {
-    color: #667781;
-    font-size: 0.9rem;
-}
-
-/* --- Formulários (Inputs) --- */
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #3b4a54;
-}
-
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="time"],
-input[type="file"],
-textarea,
-select {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #dfe1e5;
+/* Lista de Clientes com Scroll */
+.client-list-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
     border-radius: 6px;
-    box-sizing: border-box; /* Garante que o padding não estoure a largura */
-    font-size: 1rem;
-    background-color: #fcfcfc;
-}
-
-input:focus, textarea:focus, select:focus {
-    border-color: #00a884;
-    outline: none;
     background-color: #fff;
 }
 
-/* --- Botões --- */
-button {
-    width: 100%;
-    padding: 12px;
-    background-color: #00a884;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    font-size: 1rem;
-    font-weight: bold;
+/* Barra de rolagem bonita (Webkit) */
+.client-list-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.client-list-scroll::-webkit-scrollbar-thumb {
+    background-color: #ced4da;
+    border-radius: 10px;
+}
+
+/* Item da lista de seleção */
+.list-group-item-check {
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.15s;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+}
+.list-group-item-check:hover {
+    background-color: #e9ecef;
+}
+.list-group-item-check input {
+    margin-right: 12px;
+    transform: scale(1.2); /* Checkbox um pouco maior */
 }
 
-button:hover {
-    background-color: #008f6f;
-}
-
-/* Links */
-a {
-    color: #00a884;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-.logout {
-    float: right;
-    color: #ea0038;
-    font-weight: bold;
-}
-
-/* --- Extras do Dashboard --- */
-.admin-box {
-    border: 2px dashed #ff9800;
-    background-color: #fff8e1;
-}
-
-/* Tabelas */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-th, td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #e9edef;
-}
-
-th {
-    background-color: #f0f2f5;
-    color: #54656f;
-}
-
-/* Mensagens de Erro (Flash) */
-.flash-message {
-    background-color: #fee2e2;
-    color: #991b1b;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    margin-bottom: 15px;
-    border: 1px solid #fecaca;
+/* Navbar */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }

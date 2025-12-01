@@ -1,23 +1,24 @@
 import os
 import time
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request, render_template, redirect, url_for, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # --- IMPORTAÇÕES DO SELENIUM ---
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys 
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-from models import app, db, User, Agendamento
+# Importa as tabelas do models.py
+from models import app, db, User, Agendamento, Cliente
 
 # --- Configuração do Login ---
 login_manager = LoginManager()
@@ -35,15 +36,22 @@ scheduler.start()
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+# --- ROTA: DASHBOARD ---
 @app.route('/')
 @login_required
 def index():
+    # Carrega tarefas
     if current_user.is_admin:
-        tarefas = Agendamento.query.all()
+        tarefas = Agendamento.query.order_by(Agendamento.id.desc()).all()
     else:
         tarefas = Agendamento.query.filter_by(user_id=current_user.id).all()
-    return render_template('dashboard.html', nome=current_user.username, tarefas=tarefas)
+    
+    # Carrega clientes para a nova lista de seleção
+    clientes = Cliente.query.all()
+    
+    return render_template('dashboard.html', nome=current_user.username, tarefas=tarefas, clientes=clientes)
 
+# --- ROTAS DE LOGIN/LOGOUT ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -79,10 +87,37 @@ def criar_usuario():
     flash(f'Usuário {novo_user} criado!')
     return redirect(url_for('index'))
 
+# --- NOVA ROTA: CADASTRAR CLIENTE (O que estava faltando!) ---
+@app.route('/cadastrar_cliente', methods=['POST'])
+@login_required
+def cadastrar_cliente():
+    nome = request.form.get('cliente_nome')
+    telefone = request.form.get('cliente_telefone')
+    
+    # Limpa o telefone
+    telefone_limpo = re.sub(r'\D', '', telefone)
+    
+    # Verifica se já existe
+    if Cliente.query.filter_by(telefone=telefone_limpo).first():
+        flash('Erro: Cliente já cadastrado com este telefone.')
+    else:
+        novo_cliente = Cliente(nome=nome, telefone=telefone_limpo, criado_em=datetime.now().strftime("%d/%m/%Y"))
+        db.session.add(novo_cliente)
+        db.session.commit()
+        flash(f'Cliente {nome} cadastrado com sucesso!')
+        
+    return redirect(url_for('index'))
+
+# --- ROTA: AGENDAR (Suporte a Múltiplos e Grupos) ---
 @app.route('/agendar', methods=['POST'])
 @login_required
 def agendar_mensagem():
-    destinatario = request.form.get('numero') 
+    # 1. Pega lista de IDs dos checkboxes
+    ids_selecionados = request.form.getlist('destinatarios') 
+    
+    # 2. Pega grupo manual
+    grupo_manual = request.form.get('grupo_manual')
+
     mensagem = request.form.get('texto')
     hora_envio = request.form.get('horario') 
     frequencia = request.form.get('frequencia') 
@@ -91,38 +126,68 @@ def agendar_mensagem():
     caminho_absoluto = None
     
     if imagem and imagem.filename != '':
-        # Sanitização básica do nome do arquivo para evitar problemas futuros
         safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '', imagem.filename)
-        # Adiciona timestamp para evitar duplicatas
         safe_filename = f"{int(time.time())}_{safe_filename}"
-        
         caminho_final = os.path.join(UPLOAD_FOLDER, safe_filename)
         imagem.save(caminho_final)
         caminho_absoluto = os.path.abspath(caminho_final)
 
-    nova_tarefa = Agendamento(
-        user_id=current_user.id, destinatario=destinatario, mensagem=mensagem,
-        imagem_path=caminho_absoluto, horario=hora_envio, dias_semana=frequencia
-    )
-    db.session.add(nova_tarefa)
-    db.session.commit()
+    # Monta lista de destinos
+    lista_final = []
 
-    hora, minuto = map(int, hora_envio.split(':'))
+    # Adiciona clientes do banco
+    for cliente_id in ids_selecionados:
+        cliente = db.session.get(Cliente, int(cliente_id))
+        if cliente:
+            lista_final.append(cliente.telefone)
+
+    # Adiciona grupo manual (Suporte a múltiplos separados por vírgula)
+    if grupo_manual:
+        # Quebra o texto onde tiver vírgula (,) ou ponto e vírgula (;)
+        grupos_extras = re.split(r'[;,]', grupo_manual)
+        
+        for g in grupos_extras:
+            g = g.strip() # Remove espaços antes e depois (limpeza)
+            if g: # Se sobrou algum texto
+                lista_final.append(g)
+
+    if not lista_final:
+        flash('Erro: Selecione ao menos um contato ou digite um grupo.')
+        return redirect(url_for('index'))
+
+    # Agenda escalonado
+    hora_base, minuto_base = map(int, hora_envio.split(':'))
+    data_base = datetime.now().replace(hour=hora_base, minute=minuto_base, second=0)
     
-    if frequencia == 'seg-sex':
-        scheduler.add_job(robo_enviar_zap, 'cron', day_of_week='mon-fri', hour=hora, minute=minuto, args=[destinatario, mensagem, caminho_absoluto])
-    elif frequencia == 'diaria':
-        scheduler.add_job(robo_enviar_zap, 'cron', hour=hora, minute=minuto, args=[destinatario, mensagem, caminho_absoluto])
-    else:
-        scheduler.add_job(robo_enviar_zap, 'date', run_date=datetime.now().replace(hour=hora, minute=minuto, second=0), args=[destinatario, mensagem, caminho_absoluto])
+    incremento = 0
+    for destino in lista_final:
+        nova_tarefa = Agendamento(
+            user_id=current_user.id, destinatario=destino, mensagem=mensagem,
+            imagem_path=caminho_absoluto, horario=hora_envio, dias_semana=frequencia
+        )
+        db.session.add(nova_tarefa)
+        
+        # 2 minutos entre envios
+        tempo_ajustado = data_base + timedelta(minutes=incremento * 2) 
+        h_exec = tempo_ajustado.hour
+        m_exec = tempo_ajustado.minute
+        
+        if frequencia == 'seg-sex':
+            scheduler.add_job(robo_enviar_zap, 'cron', day_of_week='mon-fri', hour=h_exec, minute=m_exec, args=[destino, mensagem, caminho_absoluto])
+        elif frequencia == 'diaria':
+            scheduler.add_job(robo_enviar_zap, 'cron', hour=h_exec, minute=m_exec, args=[destino, mensagem, caminho_absoluto])
+        else:
+            scheduler.add_job(robo_enviar_zap, 'date', run_date=tempo_ajustado, args=[destino, mensagem, caminho_absoluto])
+        
+        incremento += 1
 
-    flash('Mensagem agendada!')
+    db.session.commit()
+    flash(f'Agendado para {len(lista_final)} destinos!')
     return redirect(url_for('index'))
 
-# --- FUNÇÃO DO ROBÔ: O HÍBRIDO (Texto Manual + Imagem Input) ---
-def robo_enviar_zap(numero, texto, caminho_imagem):
-    numero_limpo = re.sub(r'\D', '', numero)
-    print(f"--- ROBÔ INICIADO: Enviando para {numero_limpo} ---")
+# --- FUNÇÃO DO ROBÔ (Híbrida: Link Direto ou Busca de Grupo) ---
+def robo_enviar_zap(destinatario, texto, caminho_imagem):
+    print(f"--- ROBÔ INICIADO: Destino -> {destinatario} ---")
     driver = None 
     try:
         options = webdriver.ChromeOptions()
@@ -134,31 +199,56 @@ def robo_enviar_zap(numero, texto, caminho_imagem):
         
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         
-        link = f"https://web.whatsapp.com/send?phone={numero_limpo}"
-        driver.get(link)
-        
-        print("Aguardando carregamento (Máximo 60s)...")
-        
-        # --- AQUI ESTÁ A CORREÇÃO ---
-        # Usamos WebDriverWait para esperar a caixa CORRETA aparecer.
-        # Se demorar, ele espera. Não tenta adivinhar.
-        try:
-            wait = WebDriverWait(driver, 60)
-            
-            # Espera explícita pela caixa de texto DENTRO DO RODAPÉ (#main footer)
-            caixa_texto = wait.until(EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "#main footer div[contenteditable='true']")
-            ))
-            
-            # Clica para garantir o foco
-            caixa_texto.click()
-            print("Chat localizado e focado no Rodapé.")
-            
-        except Exception as e:
-            print(f"ERRO FATAL: Não encontrei a caixa de texto do chat. O número pode ser inválido ou a internet está lenta. Erro: {e}")
-            return # Para tudo se não achar a certa
+        # LÓGICA DE DETECÇÃO (Número ou Grupo)
+        apenas_numeros = re.sub(r'\D', '', destinatario)
+        # Se tem mais de 10 dígitos e nenhuma letra, é telefone
+        is_telefone = len(apenas_numeros) > 10 and not re.search(r'[a-zA-Z]', destinatario)
 
-        # --- 1. ENVIO DE TEXTO ---
+        if is_telefone:
+            print("Modo: Telefone (Link Direto)")
+            link = f"https://web.whatsapp.com/send?phone={apenas_numeros}"
+            driver.get(link)
+            wait_time = 60
+        else:
+            print(f"Modo: Grupo/Nome '{destinatario}' (Busca Manual)")
+            driver.get("https://web.whatsapp.com")
+            wait_time = 60
+
+        print(f"Aguardando carregamento ({wait_time}s)...")
+        wait = WebDriverWait(driver, wait_time)
+        
+        try:
+            if is_telefone:
+                # Espera a caixa do chat direto
+                caixa_texto = wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "#main footer div[contenteditable='true']")
+                ))
+                caixa_texto.click()
+            else:
+                # SE FOR GRUPO: Pesquisa na barra lateral
+                barra_pesquisa = wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "div[contenteditable='true'][data-tab='3']")
+                ))
+                barra_pesquisa.click()
+                time.sleep(1)
+                
+                # Digita nome e Enter
+                barra_pesquisa.send_keys(destinatario)
+                time.sleep(2)
+                barra_pesquisa.send_keys(Keys.ENTER)
+                time.sleep(3)
+                
+                # Foca no chat que abriu
+                caixa_texto = driver.find_element(By.CSS_SELECTOR, "#main footer div[contenteditable='true']")
+                caixa_texto.click()
+
+            print("Chat localizado.")
+
+        except Exception as e:
+            print(f"ERRO FATAL: Chat não localizado. {e}")
+            return 
+
+        # 1. ENVIO DE TEXTO
         if texto:
             print("Digitando texto...")
             for linha in texto.split('\n'):
@@ -166,13 +256,16 @@ def robo_enviar_zap(numero, texto, caminho_imagem):
                 caixa_texto.send_keys(Keys.SHIFT + Keys.ENTER)
             time.sleep(1)
             
-            caixa_texto.send_keys(Keys.ENTER)
+            try:
+                driver.find_element(By.CSS_SELECTOR, "span[data-icon='send']").click()
+            except:
+                caixa_texto.send_keys(Keys.ENTER)
             print("Texto enviado!")
             time.sleep(3) 
 
-        # --- 2. ENVIO DE IMAGEM (Input Oculto) ---
+        # 2. ENVIO DE IMAGEM
         if caminho_imagem and os.path.exists(caminho_imagem):
-            print(f"Injetando imagem: {caminho_imagem}")
+            print(f"Injetando imagem...")
             try:
                 inputs = driver.find_elements(By.TAG_NAME, "input")
                 anexou = False
@@ -180,30 +273,23 @@ def robo_enviar_zap(numero, texto, caminho_imagem):
                     if "image/" in inp.get_attribute("accept") or "":
                         inp.send_keys(caminho_imagem)
                         anexou = True
-                        print("Imagem carregada no input!")
                         break
-                
                 if anexou:
-                    print("Aguardando pré-visualização (10s)...")
-                    time.sleep(10) # Tempo extra para carregar a imagem
+                    time.sleep(10)
                     ActionChains(driver).send_keys(Keys.ENTER).perform()
                     time.sleep(5)
                     print("Imagem ENVIADA!")
-                else:
-                    print("FALHA: Input de arquivo não encontrado.")
-                    
             except Exception as e:
-                print(f"Erro no envio de imagem: {e}")
+                print(f"Erro imagem: {e}")
         
-        print("Processo finalizado com sucesso!")
-        time.sleep(5)
+        print("Finalizado!")
+        time.sleep(3)
         
     except Exception as e:
-        print(f"Erro crítico no robô: {e}")
-    
+        print(f"Erro crítico: {e}")
     finally:
         if driver:
             driver.quit()
-            
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

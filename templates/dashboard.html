@@ -2,94 +2,182 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel - TimeSend</title>
-    <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { color: #00a884; margin-top: 0; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #00a884; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
-        button:hover { background-color: #008f6f; }
-        .logout { float: right; color: red; text-decoration: none; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
-        .admin-box { border: 2px dashed #ff9800; background-color: #fff8e1; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - TimeSend</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script>
+        function toggleTodos(source) {
+            checkboxes = document.getElementsByName('destinatarios');
+            for(var i=0, n=checkboxes.length;i<n;i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+    </script>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <a href="/logout" class="logout">Sair</a>
-            <h2>Olá, {{ nome }}!</h2>
-            <p>Use o formulário abaixo para agendar suas mensagens automáticas.</p>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 py-3 shadow">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-robot text-success"></i> TimeSend
+            </a>
+            <div class="d-flex align-items-center text-white gap-3">
+                <div class="text-end d-none d-md-block">
+                    <small class="d-block text-muted" style="line-height: 1;">Bem-vindo,</small>
+                    <span class="fw-bold">{{ nome }}</span>
+                </div>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </div>
         </div>
+    </nav>
 
-        <div class="card">
-            <h3>📅 Novo Agendamento</h3>
-            <form action="/agendar" method="POST" enctype="multipart/form-data">
-                <label>Número do Cliente (com 55 e DDD):</label>
-                <input type="text" name="numero" placeholder="Ex: 5511999998888" required>
-
-                <label>Mensagem de Texto:</label>
-                <textarea name="texto" rows="4" placeholder="Digite sua mensagem..."></textarea>
-
-                <label>Imagem (Opcional):</label>
-                <input type="file" name="imagem_upload" accept="image/*">
-
-                <div style="display: flex; gap: 20px;">
-                    <div style="flex: 1;">
-                        <label>Horário:</label>
-                        <input type="time" name="horario" required>
+    <div class="container">
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-bell-fill me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                    <div style="flex: 1;">
-                        <label>Frequência:</label>
-                        <select name="frequencia">
-                            <option value="unica">Apenas Hoje</option>
-                            <option value="diaria">Todos os dias</option>
-                            <option value="seg-sex">Segunda a Sexta</option>
-                        </select>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                
+                <div class="card card-custom mb-4">
+                    <div class="card-header card-header-custom">
+                        <i class="bi bi-person-plus-fill text-primary"></i> Novo Contato
+                    </div>
+                    <div class="card-body">
+                        <form action="/cadastrar_cliente" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label small text-muted fw-bold">NOME</label>
+                                <input type="text" name="cliente_nome" class="form-control" placeholder="Ex: Cliente VIP" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted fw-bold">WHATSAPP</label>
+                                <input type="text" name="cliente_telefone" class="form-control" placeholder="551199..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-save"></i> Salvar
+                            </button>
+                        </form>
                     </div>
                 </div>
 
-                <button type="submit">Agendar Envio</button>
-            </form>
-        </div>
+                {% if current_user.is_admin %}
+                <div class="card card-custom mb-4 border-warning" style="border: 1px solid #ffc107;">
+                    <div class="card-header card-header-custom text-warning">
+                        <i class="bi bi-shield-lock-fill"></i> Criar Novo Usuário
+                    </div>
+                    <div class="card-body bg-light">
+                        <form action="/criar_usuario" method="POST">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="text" name="new_username" class="form-control form-control-sm" placeholder="Login" required>
+                                </div>
+                                <div class="col-6">
+                                    <input type="password" name="new_password" class="form-control form-control-sm" placeholder="Senha" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-sm w-100 mt-2 fw-bold text-dark">
+                                <i class="bi bi-plus-circle"></i> Criar Acesso
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
 
-        {% if current_user.is_admin %}
-        <div class="card admin-box">
-            <h3 style="color: #e65100;">👑 Área do Administrador</h3>
-            <p>Cadastrar novo usuário no sistema.</p>
-            <form action="/criar_usuario" method="POST">
-                <input type="text" name="new_username" placeholder="Novo Usuário" required style="width: 48%; display: inline-block;">
-                <input type="password" name="new_password" placeholder="Nova Senha" required style="width: 48%; display: inline-block;">
-                <button type="submit" style="background-color: #e65100;">Criar Usuário</button>
-            </form>
-        </div>
-        {% endif %}
+                <div class="card card-custom">
+                    <div class="card-header card-header-custom">
+                        <i class="bi bi-clock-history text-secondary"></i> Últimos Envios
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" style="font-size: 0.85rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Destino</th>
+                                        <th>Hora</th>
+                                        <th>Msg</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tarefa in tarefas %}
+                                    <tr>
+                                        <td class="text-truncate" style="max-width: 100px;" title="{{ tarefa.destinatario }}">
+                                            {{ tarefa.destinatario }}
+                                        </td>
+                                        <td>{{ tarefa.horario }}</td>
+                                        <td class="text-truncate" style="max-width: 80px;" title="{{ tarefa.mensagem }}">
+                                            {{ tarefa.mensagem }}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="3" class="text-center text-muted py-3">Histórico vazio.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <div class="card">
-            <h3>Histórico de Agendamentos</h3>
-            <table>
-                <tr>
-                    <th>Para</th>
-                    <th>Horário</th>
-                    <th>Freq.</th>
-                    <th>Mensagem</th>
-                </tr>
-                {% for tarefa in tarefas %}
-                <tr>
-                    <td>{{ tarefa.destinatario }}</td>
-                    <td>{{ tarefa.horario }}</td>
-                    <td>{{ tarefa.dias_semana or 'Única' }}</td>
-                    <td>{{ tarefa.mensagem[:30] }}...</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4">Nenhum agendamento encontrado.</td></tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div>
-</body>
-</html>
+            <div class="col-lg-8">
+                <div class="card card-custom h-100">
+                    <div class="card-header card-header-custom">
+                        <i class="bi bi-send-fill text-success"></i> Agendar Disparo
+                    </div>
+                    <div class="card-body">
+                        <form action="/agendar" method="POST" enctype="multipart/form-data">
+                            
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3"><i class="bi bi-1-circle"></i> Destinatários</h6>
+                            
+                            <div class="mb-3">
+                                <div class="client-list-scroll">
+                                    <div class="p-2 bg-light border-bottom sticky-top">
+                                        <label class="form-check-label fw-bold text-primary">
+                                            <input class="form-check-input me-2" type="checkbox" onClick="toggleTodos(this)">
+                                            Selecionar Todos
+                                        </label>
+                                    </div>
+                                    
+                                    {% if clientes %}
+                                        {% for c in clientes %}
+                                        <label class="list-group-item-check">
+                                            <input class="form-check-input" type="checkbox" name="destinatarios" value="{{ c.id }}">
+                                            <div>
+                                                <span class="fw-bold d-block text-dark">{{ c.nome }}</span>
+                                                <small class="text-muted"><i class="bi bi-whatsapp"></i> {{ c.telefone }}</small>
+                                            </div>
+                                        </label>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="p-4 text-center text-muted">
+                                            <p>Nenhum contato salvo.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small text-muted">Ou digite Grupos/Números avulsos (separados por vírgula)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-people-fill"></i></span>
+                                    <input type="text" name="grupo_manual" class="form-control" placeholder="Ex: Grupo Família, 557199998888">
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h6 class="text-muted text

@@ -5,7 +5,7 @@ with app.app_context():
     try:
         # Cria uma conexão direta e manda o comando SQL
         with db.engine.connect() as connection:
-            # Comando para aumentar a coluna password para 255 caracteres
+            
             connection.execute(text("ALTER TABLE user MODIFY COLUMN password VARCHAR(255)"))
             connection.commit()
             
