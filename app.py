@@ -17,7 +17,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Importa as tabelas do models.py
 from models import app, db, User, Agendamento, Cliente
 
 # --- Configuração do Login ---
@@ -40,15 +39,13 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def index():
-    # Carrega tarefas
+    # Admin vê tudo, Usuário vê só o dele
     if current_user.is_admin:
         tarefas = Agendamento.query.order_by(Agendamento.id.desc()).all()
     else:
-        tarefas = Agendamento.query.filter_by(user_id=current_user.id).all()
+        tarefas = Agendamento.query.filter_by(user_id=current_user.id).order_by(Agendamento.id.desc()).all()
     
-    # Carrega clientes para a nova lista de seleção
     clientes = Cliente.query.all()
-    
     return render_template('dashboard.html', nome=current_user.username, tarefas=tarefas, clientes=clientes)
 
 # --- ROTAS DE LOGIN/LOGOUT ---
@@ -87,37 +84,29 @@ def criar_usuario():
     flash(f'Usuário {novo_user} criado!')
     return redirect(url_for('index'))
 
-# --- NOVA ROTA: CADASTRAR CLIENTE (O que estava faltando!) ---
+# --- ROTA: CADASTRAR CLIENTE ---
 @app.route('/cadastrar_cliente', methods=['POST'])
 @login_required
 def cadastrar_cliente():
     nome = request.form.get('cliente_nome')
     telefone = request.form.get('cliente_telefone')
-    
-    # Limpa o telefone
     telefone_limpo = re.sub(r'\D', '', telefone)
     
-    # Verifica se já existe
     if Cliente.query.filter_by(telefone=telefone_limpo).first():
-        flash('Erro: Cliente já cadastrado com este telefone.')
+        flash('Erro: Cliente já cadastrado.')
     else:
         novo_cliente = Cliente(nome=nome, telefone=telefone_limpo, criado_em=datetime.now().strftime("%d/%m/%Y"))
         db.session.add(novo_cliente)
         db.session.commit()
-        flash(f'Cliente {nome} cadastrado com sucesso!')
-        
+        flash(f'Cliente {nome} salvo!')
     return redirect(url_for('index'))
 
-# --- ROTA: AGENDAR (Suporte a Múltiplos e Grupos) ---
+# --- ROTA: AGENDAR (Agora com suporte Multi-Usuário) ---
 @app.route('/agendar', methods=['POST'])
 @login_required
 def agendar_mensagem():
-    # 1. Pega lista de IDs dos checkboxes
     ids_selecionados = request.form.getlist('destinatarios') 
-    
-    # 2. Pega grupo manual
     grupo_manual = request.form.get('grupo_manual')
-
     mensagem = request.form.get('texto')
     hora_envio = request.form.get('horario') 
     frequencia = request.form.get('frequencia') 
@@ -132,52 +121,48 @@ def agendar_mensagem():
         imagem.save(caminho_final)
         caminho_absoluto = os.path.abspath(caminho_final)
 
-    # Monta lista de destinos
     lista_final = []
-
-    # Adiciona clientes do banco
     for cliente_id in ids_selecionados:
         cliente = db.session.get(Cliente, int(cliente_id))
         if cliente:
             lista_final.append(cliente.telefone)
 
-    # Adiciona grupo manual (Suporte a múltiplos separados por vírgula)
     if grupo_manual:
-        # Quebra o texto onde tiver vírgula (,) ou ponto e vírgula (;)
         grupos_extras = re.split(r'[;,]', grupo_manual)
-        
         for g in grupos_extras:
-            g = g.strip() # Remove espaços antes e depois (limpeza)
-            if g: # Se sobrou algum texto
-                lista_final.append(g)
+            g = g.strip()
+            if g: lista_final.append(g)
 
     if not lista_final:
-        flash('Erro: Selecione ao menos um contato ou digite um grupo.')
+        flash('Selecione pelo menos um contato.')
         return redirect(url_for('index'))
 
-    # Agenda escalonado
+    # Configura data base
     hora_base, minuto_base = map(int, hora_envio.split(':'))
     data_base = datetime.now().replace(hour=hora_base, minute=minuto_base, second=0)
     
     incremento = 0
+    # ID DO USUÁRIO ATUAL (Quem está agendando)
+    usuario_atual_id = current_user.id
+
     for destino in lista_final:
         nova_tarefa = Agendamento(
-            user_id=current_user.id, destinatario=destino, mensagem=mensagem,
+            user_id=usuario_atual_id, destinatario=destino, mensagem=mensagem,
             imagem_path=caminho_absoluto, horario=hora_envio, dias_semana=frequencia
         )
         db.session.add(nova_tarefa)
         
-        # 2 minutos entre envios
         tempo_ajustado = data_base + timedelta(minutes=incremento * 2) 
         h_exec = tempo_ajustado.hour
         m_exec = tempo_ajustado.minute
         
+        # IMPORTANTE: Passamos 'usuario_atual_id' para o robô saber qual pasta abrir
         if frequencia == 'seg-sex':
-            scheduler.add_job(robo_enviar_zap, 'cron', day_of_week='mon-fri', hour=h_exec, minute=m_exec, args=[destino, mensagem, caminho_absoluto])
+            scheduler.add_job(robo_enviar_zap, 'cron', day_of_week='mon-fri', hour=h_exec, minute=m_exec, args=[destino, mensagem, caminho_absoluto, usuario_atual_id])
         elif frequencia == 'diaria':
-            scheduler.add_job(robo_enviar_zap, 'cron', hour=h_exec, minute=m_exec, args=[destino, mensagem, caminho_absoluto])
+            scheduler.add_job(robo_enviar_zap, 'cron', hour=h_exec, minute=m_exec, args=[destino, mensagem, caminho_absoluto, usuario_atual_id])
         else:
-            scheduler.add_job(robo_enviar_zap, 'date', run_date=tempo_ajustado, args=[destino, mensagem, caminho_absoluto])
+            scheduler.add_job(robo_enviar_zap, 'date', run_date=tempo_ajustado, args=[destino, mensagem, caminho_absoluto, usuario_atual_id])
         
         incremento += 1
 
@@ -185,14 +170,19 @@ def agendar_mensagem():
     flash(f'Agendado para {len(lista_final)} destinos!')
     return redirect(url_for('index'))
 
-# --- FUNÇÃO DO ROBÔ (Híbrida: Link Direto ou Busca de Grupo) ---
-def robo_enviar_zap(destinatario, texto, caminho_imagem):
-    print(f"--- ROBÔ INICIADO: Destino -> {destinatario} ---")
+# --- FUNÇÃO DO ROBÔ (Multi-Sessão / Híbrido) ---
+def robo_enviar_zap(destinatario, texto, caminho_imagem, user_id):
+    print(f"--- ROBÔ INICIADO: Usuário {user_id} -> {destinatario} ---")
     driver = None 
     try:
         options = webdriver.ChromeOptions()
         dir_path = os.getcwd()
-        profile_path = os.path.join(dir_path, "sessao_zap")
+        
+        # --- CRIAÇÃO DE SESSÃO ÚNICA POR USUÁRIO ---
+        # Ex: sessao_zap_1, sessao_zap_2, etc.
+        nome_pasta_sessao = f"sessao_zap_{user_id}"
+        profile_path = os.path.join(dir_path, nome_pasta_sessao)
+        
         options.add_argument(f"user-data-dir={profile_path}") 
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-gpu")
@@ -201,16 +191,13 @@ def robo_enviar_zap(destinatario, texto, caminho_imagem):
         
         # LÓGICA DE DETECÇÃO (Número ou Grupo)
         apenas_numeros = re.sub(r'\D', '', destinatario)
-        # Se tem mais de 10 dígitos e nenhuma letra, é telefone
         is_telefone = len(apenas_numeros) > 10 and not re.search(r'[a-zA-Z]', destinatario)
 
         if is_telefone:
-            print("Modo: Telefone (Link Direto)")
             link = f"https://web.whatsapp.com/send?phone={apenas_numeros}"
             driver.get(link)
             wait_time = 60
         else:
-            print(f"Modo: Grupo/Nome '{destinatario}' (Busca Manual)")
             driver.get("https://web.whatsapp.com")
             wait_time = 60
 
@@ -219,26 +206,20 @@ def robo_enviar_zap(destinatario, texto, caminho_imagem):
         
         try:
             if is_telefone:
-                # Espera a caixa do chat direto
                 caixa_texto = wait.until(EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "#main footer div[contenteditable='true']")
                 ))
                 caixa_texto.click()
             else:
-                # SE FOR GRUPO: Pesquisa na barra lateral
                 barra_pesquisa = wait.until(EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "div[contenteditable='true'][data-tab='3']")
                 ))
                 barra_pesquisa.click()
                 time.sleep(1)
-                
-                # Digita nome e Enter
                 barra_pesquisa.send_keys(destinatario)
                 time.sleep(2)
                 barra_pesquisa.send_keys(Keys.ENTER)
                 time.sleep(3)
-                
-                # Foca no chat que abriu
                 caixa_texto = driver.find_element(By.CSS_SELECTOR, "#main footer div[contenteditable='true']")
                 caixa_texto.click()
 
@@ -248,24 +229,18 @@ def robo_enviar_zap(destinatario, texto, caminho_imagem):
             print(f"ERRO FATAL: Chat não localizado. {e}")
             return 
 
-        # 1. ENVIO DE TEXTO
         if texto:
-            print("Digitando texto...")
             for linha in texto.split('\n'):
                 caixa_texto.send_keys(linha)
                 caixa_texto.send_keys(Keys.SHIFT + Keys.ENTER)
             time.sleep(1)
-            
             try:
                 driver.find_element(By.CSS_SELECTOR, "span[data-icon='send']").click()
             except:
                 caixa_texto.send_keys(Keys.ENTER)
-            print("Texto enviado!")
             time.sleep(3) 
 
-        # 2. ENVIO DE IMAGEM
         if caminho_imagem and os.path.exists(caminho_imagem):
-            print(f"Injetando imagem...")
             try:
                 inputs = driver.find_elements(By.TAG_NAME, "input")
                 anexou = False
@@ -278,7 +253,6 @@ def robo_enviar_zap(destinatario, texto, caminho_imagem):
                     time.sleep(10)
                     ActionChains(driver).send_keys(Keys.ENTER).perform()
                     time.sleep(5)
-                    print("Imagem ENVIADA!")
             except Exception as e:
                 print(f"Erro imagem: {e}")
         
@@ -292,4 +266,5 @@ def robo_enviar_zap(destinatario, texto, caminho_imagem):
             driver.quit()
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Modo Servidor Ativo (Acessível na Rede)
+    app.run(host='0.0.0.0', port=5000, debug=True)
