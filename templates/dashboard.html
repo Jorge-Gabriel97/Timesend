@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard - TimeSend</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -12,9 +12,13 @@
     <script>
         function toggleTodos(source) {
             checkboxes = document.getElementsByName('destinatarios');
-            for(var i=0, n=checkboxes.length;i<n;i++) {
-                checkboxes[i].checked = source.checked;
-            }
+            for(var i=0, n=checkboxes.length;i<n;i++) { checkboxes[i].checked = source.checked; }
+        }
+
+        // Função para preencher o Modal de Edição
+        function preencherModal(id, texto) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_texto').value = texto;
         }
     </script>
 </head>
@@ -26,10 +30,7 @@
                 <i class="bi bi-robot text-success"></i> TimeSend
             </a>
             <div class="d-flex align-items-center text-white gap-3">
-                <div class="text-end d-none d-md-block">
-                    <small class="d-block text-muted" style="line-height: 1;">Bem-vindo,</small>
-                    <span class="fw-bold">{{ nome }}</span>
-                </div>
+                <span class="fw-bold">{{ nome }}</span>
                 <a href="/logout" class="btn btn-outline-danger btn-sm">
                     <i class="bi bi-box-arrow-right"></i> Sair
                 </a>
@@ -38,38 +39,44 @@
     </nav>
 
     <div class="container">
-        
+
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
-                        <i class="bi bi-bell-fill me-2"></i> {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
         <div class="row g-4">
-            
+
             <div class="col-lg-4">
-                
+
+                <div class="d-grid mb-4">
+                    <a href="/conectar_whatsapp" class="btn btn-success shadow-sm">
+                        <i class="bi bi-qr-code-scan"></i> Conectar WhatsApp (QR Code)
+                    </a>
+                </div>
+
                 <div class="card card-custom mb-4">
                     <div class="card-header card-header-custom">
                         <i class="bi bi-person-plus-fill text-primary"></i> Novo Contato
                     </div>
                     <div class="card-body">
                         <form action="/cadastrar_cliente" method="POST">
-                            <div class="mb-3">
-                                <label class="form-label small text-muted fw-bold">NOME</label>
-                                <input type="text" name="cliente_nome" class="form-control" placeholder="Ex: João Silva" required>
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold text-muted">Nome</label>
+                                <input type="text" name="cliente_nome" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small text-muted fw-bold">WHATSAPP</label>
-                                <input type="text" name="cliente_telefone" class="form-control" placeholder="551199..." required>
+                                <label class="form-label small fw-bold text-muted">Telefone (55...)</label>
+                                <input type="text" name="cliente_telefone" class="form-control" required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-save"></i> Salvar na Agenda
+                                <i class="bi bi-save"></i> Salvar Contato
                             </button>
                         </form>
                     </div>
@@ -78,7 +85,7 @@
                 {% if current_user.is_admin %}
                 <div class="card card-custom mb-4 border-warning" style="border: 1px solid #ffc107;">
                     <div class="card-header card-header-custom text-warning">
-                        <i class="bi bi-shield-lock-fill"></i> Criar Novo Usuário
+                        <i class="bi bi-shield-lock-fill"></i> Criar Usuário (Admin)
                     </div>
                     <div class="card-body bg-light">
                         <form action="/criar_usuario" method="POST">
@@ -100,7 +107,7 @@
 
                 <div class="card card-custom">
                     <div class="card-header card-header-custom">
-                        <i class="bi bi-clock-history text-secondary"></i> Últimos Envios
+                        <i class="bi bi-clock-history text-secondary"></i> Agendamentos
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -109,22 +116,27 @@
                                     <tr>
                                         <th>Destino</th>
                                         <th>Hora</th>
-                                        <th>Msg</th>
+                                        <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for tarefa in tarefas %}
                                     <tr>
-                                        <td class="text-truncate" style="max-width: 100px;" title="{{ tarefa.destinatario }}">
+                                        <td class="text-truncate" style="max-width: 90px;" title="{{ tarefa.destinatario }}">
                                             {{ tarefa.destinatario }}
                                         </td>
                                         <td>{{ tarefa.horario }}</td>
-                                        <td class="text-truncate" style="max-width: 80px;" title="{{ tarefa.mensagem }}">
-                                            {{ tarefa.mensagem }}
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-light text-primary" data-bs-toggle="modal" data-bs-target="#modalEditar" onclick="preencherModal('{{ tarefa.id }}', '{{ tarefa.mensagem }}')">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <a href="/excluir_tarefa/{{ tarefa.id }}" class="btn btn-sm btn-light text-danger" onclick="return confirm('Cancelar este agendamento?')">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="3" class="text-center text-muted py-3">Histórico vazio.</td></tr>
+                                    <tr><td colspan="3" class="text-center py-3 text-muted">Nenhuma tarefa agendada.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -140,80 +152,83 @@
                     </div>
                     <div class="card-body">
                         <form action="/agendar" method="POST" enctype="multipart/form-data">
-                            
-                            <h6 class="text-muted text-uppercase small fw-bold mb-3"><i class="bi bi-1-circle"></i> Destinatários</h6>
-                            
+
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                                <i class="bi bi-1-circle"></i> Quem vai receber?
+                            </h6>
+
                             <div class="mb-3">
-                                <div class="client-list-scroll">
-                                    <div class="p-2 bg-light border-bottom sticky-top">
-                                        <label class="form-check-label fw-bold text-primary">
+                                <div class="client-list-scroll" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                    <div class="p-2 bg-light border-bottom sticky-top mb-2">
+                                        <label class="form-check-label fw-bold text-primary" style="cursor: pointer;">
                                             <input class="form-check-input me-2" type="checkbox" onClick="toggleTodos(this)">
                                             Selecionar Todos da Agenda
                                         </label>
                                     </div>
-                                    
+
                                     {% if clientes %}
                                         {% for c in clientes %}
-                                        <label class="list-group-item-check">
-                                            <input class="form-check-input" type="checkbox" name="destinatarios" value="{{ c.id }}">
+                                        <label class="d-flex align-items-center p-2 border-bottom" style="cursor: pointer;">
+                                            <input class="form-check-input me-3" type="checkbox" name="destinatarios" value="{{ c.id }}">
                                             <div>
                                                 <span class="fw-bold d-block text-dark">{{ c.nome }}</span>
-                                                <small class="text-muted"><i class="bi bi-whatsapp"></i> {{ c.telefone }}</small>
+                                                <small class="text-muted">{{ c.telefone }}</small>
                                             </div>
                                         </label>
                                         {% endfor %}
                                     {% else %}
-                                        <div class="p-4 text-center text-muted">
-                                            <p>Nenhum contato salvo.</p>
-                                        </div>
+                                        <p class="text-center text-muted mt-3">Sua agenda está vazia.</p>
                                     {% endif %}
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label class="form-label small text-muted">Ou digite Grupos/Números avulsos (separados por vírgula)</label>
+                                <label class="form-label small text-muted">Grupos ou Números Avulsos (separados por vírgula)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-people-fill"></i></span>
-                                    <input type="text" name="grupo_manual" class="form-control" placeholder="Ex: Grupo Família, 557199998888">
+                                    <span class="input-group-text bg-white"><i class="bi bi-people"></i></span>
+                                    <input type="text" name="grupo_manual" class="form-control" placeholder="Ex: Grupo Vendas, 557199998888">
                                 </div>
                             </div>
 
                             <hr class="my-4">
 
-                            <h6 class="text-muted text-uppercase small fw-bold mb-3"><i class="bi bi-2-circle"></i> Conteúdo</h6>
-                            
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                                <i class="bi bi-2-circle"></i> Mensagem e Mídia
+                            </h6>
+
                             <div class="row">
                                 <div class="col-md-7 mb-3">
-                                    <label class="form-label">Mensagem de Texto</label>
-                                    <textarea name="texto" class="form-control" rows="5" placeholder="Digite sua mensagem aqui..." style="resize: none;"></textarea>
+                                    <label class="form-label fw-bold small">Texto da Mensagem</label>
+                                    <textarea name="texto" class="form-control" rows="5" placeholder="Olá! Escreva aqui..." style="resize: none;"></textarea>
                                 </div>
                                 <div class="col-md-5 mb-3">
-                                    <label class="form-label">Imagem (Opcional)</label>
-                                    <div class="card bg-light border-dashed text-center p-3 h-100 d-flex justify-content-center align-items-center">
+                                    <label class="form-label fw-bold small">Imagem (Opcional)</label>
+                                    <div class="card bg-light border text-center p-3 h-100 d-flex justify-content-center align-items-center">
                                         <div>
-                                            <i class="bi bi-card-image display-4 text-secondary"></i>
-                                            <input type="file" name="imagem_upload" class="form-control mt-3 form-control-sm" accept="image/*">
+                                            <i class="bi bi-image display-4 text-secondary"></i>
+                                            <p class="small text-muted mb-2">JPG ou PNG</p>
+                                            <input type="file" name="imagem_upload" class="form-control form-control-sm" accept="image/*">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="row g-3 align-items-end mt-2">
+                            <div class="row g-3 align-items-end mt-2 bg-light p-3 rounded border">
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold">Horário de Início</label>
-                                    <input type="time" name="horario" class="form-control form-control-lg border-primary" required>
+                                    <label class="form-label fw-bold small">Horário de Início</label>
+                                    <input type="time" name="horario" class="form-control" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold">Repetição</label>
-                                    <select name="frequencia" class="form-select form-select-lg">
+                                    <label class="form-label fw-bold small">Frequência</label>
+                                    <select name="frequencia" class="form-select">
                                         <option value="unica">Apenas Hoje</option>
                                         <option value="diaria">Todo dia</option>
                                         <option value="seg-sex">Segunda a Sexta</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <button type="submit" class="btn btn-success btn-lg w-100 shadow">
-                                        <i class="bi bi-rocket-takeoff-fill"></i> AGENDAR
+                                    <button type="submit" class="btn btn-success w-100 fw-bold shadow">
+                                        <i class="bi bi-rocket-takeoff-fill"></i> AGENDAR DISPARO
                                     </button>
                                 </div>
                             </div>
@@ -221,6 +236,28 @@
                         </form>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Mensagem</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/editar_tarefa" method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="tarefa_id" id="edit_id">
+                        <label class="form-label">Nova Mensagem</label>
+                        <textarea name="nova_mensagem" id="edit_texto" class="form-control" rows="5"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alteração</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
