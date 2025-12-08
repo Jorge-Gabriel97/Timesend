@@ -7,9 +7,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 
 # --- CONFIGURAÇÃO DO MYSQL ---
-usuario = "root"
-senha = "root"
-host = "127.0.0.1:3306"
+usuario = "****"
+senha = "****"
+host = "****"
 banco = "timesend_db"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{usuario}:{senha}@{host}/{banco}'
