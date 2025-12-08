@@ -1,4 +1,6 @@
 import os
+import csv
+import io
 import time
 import re
 from datetime import datetime, timedelta
@@ -246,6 +248,65 @@ def thread_qrcode_selenium(user_id):
         pass
     finally:
         if driver: driver.quit()
+
+        # --- ROTA: IMPORTAÇÃO DE CSV (Forma Segura) ---
+        @app.route('/importar_csv', methods=['POST'])
+        @login_required
+        def importar_csv():
+            arquivo = request.files.get('arquivo_csv')
+
+            if not arquivo or arquivo.filename == '':
+                flash('Nenhum arquivo selecionado.')
+                return redirect(url_for('index'))
+
+            if not arquivo.filename.endswith('.csv'):
+                flash('Erro: O arquivo deve ser do tipo .CSV')
+                return redirect(url_for('index'))
+
+            try:
+                # Lê o arquivo na memória
+                stream = io.StringIO(arquivo.stream.read().decode("UTF8"), newline=None)
+                csv_input = csv.reader(stream)
+
+                # Pula a primeira linha (cabeçalho: Nome, Telefone)
+                next(csv_input, None)
+
+                count_sucesso = 0
+                count_erro = 0
+
+                for linha in csv_input:
+                    if len(linha) >= 2:
+                        nome = linha[0].strip()
+                        telefone = linha[1].strip()
+
+                        # Limpeza do telefone (apenas números)
+                        telefone_limpo = re.sub(r'\D', '', telefone)
+
+                        # Validação básica: tem que ter pelo menos 10 dígitos (DDD + numero)
+                        if len(telefone_limpo) < 10:
+                            count_erro += 1
+                            continue
+
+                        # Verifica se já existe no banco
+                        if not Cliente.query.filter_by(telefone=telefone_limpo).first():
+                            novo_cliente = Cliente(
+                                nome=nome,
+                                telefone=telefone_limpo,
+                                criado_em=datetime.now().strftime("%d/%m/%Y")
+                            )
+                            db.session.add(novo_cliente)
+                            count_sucesso += 1
+                        else:
+                            count_erro += 1  # Já existia
+
+                db.session.commit()
+                flash(
+                    f'Importação concluída! {count_sucesso} novos contatos salvos. ({count_erro} ignorados/duplicados)')
+
+            except Exception as e:
+                flash(f'Erro ao ler o arquivo: {e}. Verifique se é um CSV válido.')
+
+            return redirect(url_for('index'))
 
 
 # ==========================================

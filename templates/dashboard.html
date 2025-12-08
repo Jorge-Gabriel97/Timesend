@@ -103,6 +103,28 @@
                     </div>
                 </div>
 
+                <div class="card card-custom mb-4 border-success" style="border-left: 5px solid #198754;">
+                    <div class="card-header card-header-custom text-success">
+                        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Importar Lista (Excel/CSV)
+                    </div>
+                    <div class="card-body">
+                        <form action="/importar_csv" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Selecione o arquivo .CSV</label>
+                                <input type="file" name="arquivo_csv" class="form-control form-control-sm" accept=".csv" required>
+                            </div>
+                            <div class="alert alert-light border p-2 mb-3" style="font-size: 0.8em;">
+                                <strong>Formato Obrigatório:</strong><br>
+                                Coluna 1: Nome<br>
+                                Coluna 2: Telefone (com DDD)
+                            </div>
+                            <button type="submit" class="btn btn-outline-success w-100 btn-sm">
+                                <i class="bi bi-upload"></i> Carregar Lista
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="card card-custom">
                     <div class="card-header card-header-custom"><i class="bi bi-clock-history"></i> Agendamentos</div>
                     <div class="card-body p-0">
