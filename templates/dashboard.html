@@ -4,18 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard - TimeSend</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
     <script>
         function toggleTodos(source) {
             checkboxes = document.getElementsByName('destinatarios');
             for(var i=0, n=checkboxes.length;i<n;i++) { checkboxes[i].checked = source.checked; }
         }
-
-        // Função para preencher o Modal de Edição
         function preencherModal(id, texto) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_texto').value = texto;
@@ -23,28 +19,22 @@
     </script>
 </head>
 <body>
-
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 py-3 shadow">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="bi bi-robot text-success"></i> TimeSend
-            </a>
+            <a class="navbar-brand" href="#"><i class="bi bi-robot text-success"></i> TimeSend</a>
             <div class="d-flex align-items-center text-white gap-3">
                 <span class="fw-bold">{{ nome }}</span>
-                <a href="/logout" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Sair
-                </a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Sair</a>
             </div>
         </div>
     </nav>
 
     <div class="container">
-
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
-                        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                        {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
@@ -52,63 +42,69 @@
         {% endwith %}
 
         <div class="row g-4">
-
             <div class="col-lg-4">
 
                 <div class="d-grid mb-4">
-                    <a href="/conectar_whatsapp" class="btn btn-success shadow-sm">
-                        <i class="bi bi-qr-code-scan"></i> Conectar WhatsApp (QR Code)
-                    </a>
-                </div>
-
-                <div class="card card-custom mb-4">
-                    <div class="card-header card-header-custom">
-                        <i class="bi bi-person-plus-fill text-primary"></i> Novo Contato
-                    </div>
-                    <div class="card-body">
-                        <form action="/cadastrar_cliente" method="POST">
-                            <div class="mb-2">
-                                <label class="form-label small fw-bold text-muted">Nome</label>
-                                <input type="text" name="cliente_nome" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">Telefone (55...)</label>
-                                <input type="text" name="cliente_telefone" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-save"></i> Salvar Contato
-                            </button>
-                        </form>
-                    </div>
+                    <a href="/conectar_whatsapp" class="btn btn-success shadow-sm"><i class="bi bi-qr-code-scan"></i> Conectar WhatsApp</a>
                 </div>
 
                 {% if current_user.is_admin %}
                 <div class="card card-custom mb-4 border-warning" style="border: 1px solid #ffc107;">
-                    <div class="card-header card-header-custom text-warning">
-                        <i class="bi bi-shield-lock-fill"></i> Criar Usuário (Admin)
+                    <div class="card-header card-header-custom text-warning fw-bold">
+                        <i class="bi bi-shield-lock-fill"></i> Gestão de Usuários
                     </div>
-                    <div class="card-body bg-light">
-                        <form action="/criar_usuario" method="POST">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <input type="text" name="new_username" class="form-control form-control-sm" placeholder="Login" required>
-                                </div>
-                                <div class="col-6">
-                                    <input type="password" name="new_password" class="form-control form-control-sm" placeholder="Senha" required>
-                                </div>
+                    <div class="card-body bg-light p-2">
+                        <form action="/criar_usuario" method="POST" class="mb-3 border-bottom pb-3">
+                            <div class="row g-1">
+                                <div class="col-6"><input type="text" name="new_username" class="form-control form-control-sm" placeholder="Login" required></div>
+                                <div class="col-6"><input type="password" name="new_password" class="form-control form-control-sm" placeholder="Senha" required></div>
                             </div>
-                            <button type="submit" class="btn btn-warning btn-sm w-100 mt-2 fw-bold text-dark">
-                                <i class="bi bi-plus-circle"></i> Criar Acesso
-                            </button>
+                            <button type="submit" class="btn btn-warning btn-sm w-100 mt-2 fw-bold text-dark"><i class="bi bi-plus-circle"></i> Criar</button>
                         </form>
+
+                        <div style="max-height: 150px; overflow-y: auto;">
+                            <table class="table table-sm table-borderless mb-0" style="font-size: 0.8rem;">
+                                <tbody>
+                                    {% for u in usuarios %}
+                                    <tr class="align-middle">
+                                        <td>
+                                            <span class="{{ 'text-danger text-decoration-line-through' if u.is_blocked else 'text-dark' }}">
+                                                {{ u.username }}
+                                            </span>
+                                            {% if u.is_admin %}<span class="badge bg-warning text-dark" style="font-size: 0.6em;">ADM</span>{% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if u.id != current_user.id %}
+                                                <a href="/bloquear_usuario/{{ u.id }}" class="btn btn-sm p-0 me-2 text-secondary" title="{{ 'Desbloquear' if u.is_blocked else 'Bloquear' }}">
+                                                    <i class="bi {{ 'bi-unlock-fill text-success' if u.is_blocked else 'bi-slash-circle text-muted' }}"></i>
+                                                </a>
+                                                <a href="/excluir_usuario/{{ u.id }}" class="btn btn-sm p-0 text-danger" onclick="return confirm('Excluir este usuário? Isso apagará o histórico dele.')" title="Excluir">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
 
-                <div class="card card-custom">
-                    <div class="card-header card-header-custom">
-                        <i class="bi bi-clock-history text-secondary"></i> Agendamentos
+                <div class="card card-custom mb-4">
+                    <div class="card-header card-header-custom"><i class="bi bi-person-plus-fill text-primary"></i> Novo Contato</div>
+                    <div class="card-body">
+                        <form action="/cadastrar_cliente" method="POST">
+                            <div class="mb-2"><input type="text" name="cliente_nome" class="form-control" placeholder="Nome" required></div>
+                            <div class="mb-2"><input type="text" name="cliente_telefone" class="form-control" placeholder="Telefone (55...)" required></div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save"></i> Salvar</button>
+                        </form>
                     </div>
+                </div>
+
+                <div class="card card-custom">
+                    <div class="card-header card-header-custom"><i class="bi bi-clock-history"></i> Agendamentos</div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0" style="font-size: 0.85rem;">
@@ -122,21 +118,15 @@
                                 <tbody>
                                     {% for tarefa in tarefas %}
                                     <tr>
-                                        <td class="text-truncate" style="max-width: 90px;" title="{{ tarefa.destinatario }}">
-                                            {{ tarefa.destinatario }}
-                                        </td>
+                                        <td class="text-truncate" style="max-width: 90px;" title="{{ tarefa.destinatario }}">{{ tarefa.destinatario }}</td>
                                         <td>{{ tarefa.horario }}</td>
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-light text-primary" data-bs-toggle="modal" data-bs-target="#modalEditar" onclick="preencherModal('{{ tarefa.id }}', '{{ tarefa.mensagem }}')">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <a href="/excluir_tarefa/{{ tarefa.id }}" class="btn btn-sm btn-light text-danger" onclick="return confirm('Cancelar este agendamento?')">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </a>
+                                            <button class="btn btn-sm btn-light text-primary" data-bs-toggle="modal" data-bs-target="#modalEditar" onclick="preencherModal('{{ tarefa.id }}', '{{ tarefa.mensagem }}')"><i class="bi bi-pencil-square"></i></button>
+                                            <a href="/excluir_tarefa/{{ tarefa.id }}" class="btn btn-sm btn-light text-danger" onclick="return confirm('Cancelar?')"><i class="bi bi-trash-fill"></i></a>
                                         </td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="3" class="text-center py-3 text-muted">Nenhuma tarefa agendada.</td></tr>
+                                    <tr><td colspan="3" class="text-center py-3 text-muted">Nenhuma tarefa.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -147,92 +137,47 @@
 
             <div class="col-lg-8">
                 <div class="card card-custom h-100">
-                    <div class="card-header card-header-custom">
-                        <i class="bi bi-send-fill text-success"></i> Agendar Disparo
-                    </div>
+                    <div class="card-header card-header-custom"><i class="bi bi-send-fill text-success"></i> Agendar Disparo</div>
                     <div class="card-body">
                         <form action="/agendar" method="POST" enctype="multipart/form-data">
-
-                            <h6 class="text-muted text-uppercase small fw-bold mb-3">
-                                <i class="bi bi-1-circle"></i> Quem vai receber?
-                            </h6>
-
+                            <h6 class="text-muted small fw-bold mb-3">DESTINATÁRIOS</h6>
                             <div class="mb-3">
-                                <div class="client-list-scroll" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                <div class="client-list-scroll" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
                                     <div class="p-2 bg-light border-bottom sticky-top mb-2">
                                         <label class="form-check-label fw-bold text-primary" style="cursor: pointer;">
-                                            <input class="form-check-input me-2" type="checkbox" onClick="toggleTodos(this)">
-                                            Selecionar Todos da Agenda
+                                            <input class="form-check-input me-2" type="checkbox" onClick="toggleTodos(this)"> Selecionar Todos
                                         </label>
                                     </div>
-
                                     {% if clientes %}
                                         {% for c in clientes %}
                                         <label class="d-flex align-items-center p-2 border-bottom" style="cursor: pointer;">
                                             <input class="form-check-input me-3" type="checkbox" name="destinatarios" value="{{ c.id }}">
-                                            <div>
-                                                <span class="fw-bold d-block text-dark">{{ c.nome }}</span>
-                                                <small class="text-muted">{{ c.telefone }}</small>
-                                            </div>
+                                            <div><span class="fw-bold d-block text-dark">{{ c.nome }}</span><small class="text-muted">{{ c.telefone }}</small></div>
                                         </label>
                                         {% endfor %}
                                     {% else %}
-                                        <p class="text-center text-muted mt-3">Sua agenda está vazia.</p>
+                                        <p class="text-center text-muted mt-3">Agenda vazia.</p>
                                     {% endif %}
                                 </div>
                             </div>
-
-                            <div class="mb-4">
-                                <label class="form-label small text-muted">Grupos ou Números Avulsos (separados por vírgula)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-people"></i></span>
-                                    <input type="text" name="grupo_manual" class="form-control" placeholder="Ex: Grupo Vendas, 557199998888">
-                                </div>
-                            </div>
-
-                            <hr class="my-4">
-
-                            <h6 class="text-muted text-uppercase small fw-bold mb-3">
-                                <i class="bi bi-2-circle"></i> Mensagem e Mídia
-                            </h6>
-
+                            <div class="mb-4"><input type="text" name="grupo_manual" class="form-control" placeholder="Ou digite grupos separados por vírgula..."></div>
+                            <hr>
+                            <h6 class="text-muted small fw-bold mb-3">CONTEÚDO</h6>
                             <div class="row">
-                                <div class="col-md-7 mb-3">
-                                    <label class="form-label fw-bold small">Texto da Mensagem</label>
-                                    <textarea name="texto" class="form-control" rows="5" placeholder="Olá! Escreva aqui..." style="resize: none;"></textarea>
-                                </div>
-                                <div class="col-md-5 mb-3">
-                                    <label class="form-label fw-bold small">Imagem (Opcional)</label>
-                                    <div class="card bg-light border text-center p-3 h-100 d-flex justify-content-center align-items-center">
-                                        <div>
-                                            <i class="bi bi-image display-4 text-secondary"></i>
-                                            <p class="small text-muted mb-2">JPG ou PNG</p>
-                                            <input type="file" name="imagem_upload" class="form-control form-control-sm" accept="image/*">
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="col-md-7 mb-3"><textarea name="texto" class="form-control" rows="5" placeholder="Mensagem..."></textarea></div>
+                                <div class="col-md-5 mb-3"><input type="file" name="imagem_upload" class="form-control" accept="image/*"></div>
                             </div>
-
-                            <div class="row g-3 align-items-end mt-2 bg-light p-3 rounded border">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Horário de Início</label>
-                                    <input type="time" name="horario" class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Frequência</label>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-4"><input type="time" name="horario" class="form-control" required></div>
+                                <div class="col-4">
                                     <select name="frequencia" class="form-select">
-                                        <option value="unica">Apenas Hoje</option>
+                                        <option value="unica">Uma vez</option>
                                         <option value="diaria">Todo dia</option>
                                         <option value="seg-sex">Segunda a Sexta</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-success w-100 fw-bold shadow">
-                                        <i class="bi bi-rocket-takeoff-fill"></i> AGENDAR DISPARO
-                                    </button>
-                                </div>
+                                <div class="col-4"><button type="submit" class="btn btn-success w-100 fw-bold shadow">AGENDAR</button></div>
                             </div>
-
                         </form>
                     </div>
                 </div>
@@ -243,25 +188,18 @@
     <div class="modal fade" id="modalEditar" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Mensagem</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header"><h5 class="modal-title">Editar</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <form action="/editar_tarefa" method="POST">
                     <div class="modal-body">
                         <input type="hidden" name="tarefa_id" id="edit_id">
-                        <label class="form-label">Nova Mensagem</label>
+                        <label class="form-label">Mensagem</label>
                         <textarea name="nova_mensagem" id="edit_texto" class="form-control" rows="5"></textarea>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Alteração</button>
-                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-primary">Salvar</button></div>
                 </form>
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -7,9 +7,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 
 # --- CONFIGURAÇÃO DO MYSQL ---
-# Confirme se a senha e usuário estão corretos aqui
 usuario = "root"
-senha = "root" 
+senha = "root"
 host = "127.0.0.1:3306"
 banco = "timesend_db"
 
@@ -24,10 +23,11 @@ db = SQLAlchemy(app)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False) 
-    is_admin = db.Column(db.Boolean, default=False) 
+    password = db.Column(db.String(255), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    # NOVA COLUNA: Define se o usuário está bloqueado
+    is_blocked = db.Column(db.Boolean, default=False)
 
-# AQUI ESTAVA O POSSÍVEL ERRO: O nome correto é 'telefone', não 'destinatario'
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
@@ -37,7 +37,7 @@ class Cliente(db.Model):
 class Agendamento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    destinatario = db.Column(db.String(255), nullable=False) # Aqui sim é destinatario
+    destinatario = db.Column(db.String(255), nullable=False)
     mensagem = db.Column(db.Text, nullable=True)
     imagem_path = db.Column(db.String(200), nullable=True)
     dias_semana = db.Column(db.String(50)) 
